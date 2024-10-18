@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:lista_tarefas_2024_2/repositories/repositorio.dart';
 import '../models/tarefa.dart';
 
 class HomePage extends StatefulWidget {
@@ -12,6 +12,17 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<Tarefa> tarefas = [];
   TextEditingController controllerTarefa = TextEditingController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    Repositorio.recuperarLista().then((retornoDoThen) {
+      setState(() {
+        tarefas = retornoDoThen;
+      });
+    },);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +60,7 @@ class _HomePageState extends State<HomePage> {
                           tarefas.add(tarefa);
                         });
                         controllerTarefa.text="";
+                        Repositorio.salvarListaTarefas(tarefas);
                       }
                     },
                     icon: Icon(Icons.add)
@@ -78,6 +90,7 @@ class _HomePageState extends State<HomePage> {
       onChanged: (valorCheckebox) {
         setState(() {
           tarefas[index].realizado=valorCheckebox!;
+          Repositorio.salvarListaTarefas(tarefas);
         });
       },
     );
