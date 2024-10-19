@@ -15,12 +15,13 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    // TODO: implement initState
-    Repositorio.recuperarLista().then((retornoDoThen) {
-      setState(() {
-        tarefas = retornoDoThen;
-      });
-    },);
+    Repositorio.recuperarLista().then(
+      (retornoDoThen) {
+        setState(() {
+          tarefas = retornoDoThen;
+        });
+      },
+    );
     super.initState();
   }
 
@@ -54,17 +55,18 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
                 child: IconButton(
                     onPressed: () {
-                      if (controllerTarefa.text != "" && controllerTarefa.text != null ){
-                        Tarefa tarefa = Tarefa(titulo: controllerTarefa.text, realizado: false);
+                      if (controllerTarefa.text != "" &&
+                          controllerTarefa.text != null) {
+                        Tarefa tarefa = Tarefa(
+                            titulo: controllerTarefa.text, realizado: false);
                         setState(() {
                           tarefas.add(tarefa);
                         });
-                        controllerTarefa.text="";
+                        controllerTarefa.text = "";
                         Repositorio.salvarListaTarefas(tarefas);
                       }
                     },
-                    icon: Icon(Icons.add)
-                ),
+                    icon: Icon(Icons.add)),
               )
             ],
           ),
@@ -80,19 +82,59 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget contruirItem(BuildContext context, int index) {
-    return CheckboxListTile(
-      title: Text(tarefas[index].titulo),
-      secondary:
-          tarefas[index].realizado
-              ? Icon(Icons.check)
-              : Icon(Icons.error),
-      value: tarefas[index].realizado,
-      onChanged: (valorCheckebox) {
+    return Dismissible(
+      key: Key(DateTime.now().millisecondsSinceEpoch.toString()),
+      onDismissed: (direction) {
+        Tarefa tarefaRemovida = tarefas[index];
+        int indiceTarefaRemovida = index;
         setState(() {
-          tarefas[index].realizado=valorCheckebox!;
-          Repositorio.salvarListaTarefas(tarefas);
+          tarefas.removeAt(index);
         });
+        Repositorio.salvarListaTarefas(tarefas);
+        SnackBar snackBar = SnackBar(
+          content: Text("A tarefa ${tarefaRemovida.titulo} foi removida"),
+          action: SnackBarAction(
+            label: "Desfazer",
+            onPressed: () {
+              setState(() {
+                tarefas.insert(indiceTarefaRemovida, tarefaRemovida);
+              });
+              Repositorio.salvarListaTarefas(tarefas);
+            },
+          ),
+        );
+        ScaffoldMessenger.of(context).removeCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
       },
+      direction: DismissDirection.startToEnd,
+      background: Container(
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: Icon(
+              Icons.delete,
+              color: Colors.white,
+              size: 40,
+            ),
+          ),
+        ),
+        decoration: BoxDecoration(
+          color: Colors.red,
+        ),
+      ),
+      child: CheckboxListTile(
+        title: Text(tarefas[index].titulo),
+        secondary:
+            tarefas[index].realizado ? Icon(Icons.check) : Icon(Icons.error),
+        value: tarefas[index].realizado,
+        onChanged: (valorCheckebox) {
+          setState(() {
+            tarefas[index].realizado = valorCheckebox!;
+            Repositorio.salvarListaTarefas(tarefas);
+          });
+        },
+      ),
     );
   }
 }
